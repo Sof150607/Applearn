@@ -36,9 +36,20 @@ La app utiliza un flujo de preguntas con adaptación de dificultad basada en el 
 - `tsconfig.json` - Configuración de TypeScript.
 - `index.html` - Entrada principal del proyecto.
 - `src/main.tsx` - Renderiza la app en React.
-- `src/App.tsx` - Lógica principal, flujo de navegación y adaptabilidad.
+- `src/App.tsx` - Lógica de autenticación, navegación y layout principal.
+- `src/layout/AppLayout.tsx` - Componente de layout que incluye encabezado y barra de navegación.
+- `src/components/Navbar.tsx` - Navegación principal entre secciones.
+- `src/pages/LoginPage.tsx` - Pantalla de autenticación.
+- `src/pages/DashboardPage.tsx` - Página principal con resumen y tarjetas de estado.
+- `src/pages/StudyPage.tsx` - Página de sesiones de estudio adaptativas.
+- `src/pages/ProgressPage.tsx` - Página de progreso y métricas.
+- `src/pages/ProfilePage.tsx` - Página de perfil de usuario.
+- `src/data/questions.ts` - Banco de preguntas y lógica de selección adaptativa.
+- `src/types/index.ts` - Tipos compartidos de la aplicación.
+- `src/assets/apple-logo.svg` - Logo/mascota de la app.
 - `src/index.css` - Estilos base globales.
-- `src/App.css` - Estilos específicos del prototipo.
+- `src/App.css` - Estilos de la interfaz y componentes de la app.
+- `src/vite-env.d.ts` - Declaraciones de tipos adicionales para Vite.
 
 ## Tecnologías usadas
 
