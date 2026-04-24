@@ -17,7 +17,7 @@ type Question = {
 const timeOptions: { value: TimeOption; label: string; questions: number }[] = [
   { value: 'mucho', label: 'Mucho tiempo', questions: 15 },
   { value: 'medio', label: 'Medio tiempo', questions: 10 },
-  { value: 'poco', label: 'Poco tiempo', questions: 10 }
+  { value: 'poco', label: 'Poco tiempo', questions: 5 }
 ];
 
 const difficultyOptions: Difficulty[] = ['fácil', 'medio', 'difícil'];
@@ -208,14 +208,14 @@ const App = () => {
             <div className="answer-card">
               <p className="answer-label">Selecciona o escribe tu respuesta</p>
               <div className="quick-actions">
-                {currentQuestion.options.map((option) => (
+                {currentQuestion.options.map((option, index) => (
                   <button
                     key={option}
                     className={answerInput === option ? 'chip active' : 'chip'}
                     type="button"
                     onClick={() => setAnswerInput(option)}
                   >
-                    {option}
+                    {String.fromCharCode(65 + index)}. {option}
                   </button>
                 ))}
               </div>
