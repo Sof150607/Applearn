@@ -24,10 +24,6 @@ const DashboardPage = ({ userName }: DashboardPageProps) => {
           <span>Ritmo adaptativo</span>
           <strong>3 niveles de dificultad</strong>
         </div>
-        <div className="stat-card">
-          <span>Soporte de tiempos</span>
-          <strong>15 / 10 preguntas</strong>
-        </div>
       </div>
     </section>
   );

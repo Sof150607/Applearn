@@ -66,13 +66,21 @@ La app utiliza un flujo de preguntas con adaptación de dificultad basada en el 
 npm install
 ```
 
-3. Iniciar el servidor de desarrollo:
+3. Crear un archivo de entorno con tu clave de Google Gemini:
+
+```bash
+copy .env.example .env
+```
+
+4. Editar `.env` y establecer `VITE_GOOGLE_API_KEY` con tu clave real de Gemini.
+
+5. Iniciar el servidor de desarrollo:
 
 ```bash
 npm run dev
 ```
 
-4. Abrir la URL que indique Vite en el navegador.
+6. Abrir la URL que indique Vite en el navegador.
 
 ## Objetivo del prototipo
 

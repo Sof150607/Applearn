@@ -3,7 +3,7 @@ import type { Difficulty, Question, TimeOption } from '../types';
 export const timeOptions: { value: TimeOption; label: string; questions: number }[] = [
   { value: 'mucho', label: 'Mucho tiempo', questions: 15 },
   { value: 'medio', label: 'Medio tiempo', questions: 10 },
-  { value: 'poco', label: 'Poco tiempo', questions: 10 }
+  { value: 'poco', label: 'Poco tiempo', questions: 5 }
 ];
 
 export const difficultyOptions: Difficulty[] = ['fácil', 'medio', 'difícil'];
@@ -26,7 +26,7 @@ export const questionBank: Question[] = [
   { id: 15, difficulty: 'difícil', prompt: '¿Qué es una intervención adaptativa útil?', options: ['Simplificar contenido si hay errores', 'Ignorar fallos y seguir igual', 'Aumentar presión sin apoyo'], answer: 'Simplificar contenido si hay errores', hint: 'El sistema debe bajar la carga cuando hay problemas.' }
 ];
 
-export const pickQuestion = (difficulty: Difficulty, usedIds: number[]) => {
+export const pickQuestion = (difficulty: Difficulty, usedIds: Array<string | number>) => {
   const pool = questionBank.filter((question) => question.difficulty === difficulty && !usedIds.includes(question.id));
   if (pool.length > 0) return pool[Math.floor(Math.random() * pool.length)];
   const fallback = questionBank.filter((question) => !usedIds.includes(question.id));

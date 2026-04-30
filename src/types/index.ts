@@ -3,7 +3,7 @@ export type Difficulty = 'fácil' | 'medio' | 'difícil';
 export type NavigationSection = 'dashboard' | 'study' | 'progress' | 'profile';
 
 export type Question = {
-  id: number;
+  id: string | number;
   difficulty: Difficulty;
   prompt: string;
   options: string[];

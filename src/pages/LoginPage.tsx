@@ -27,7 +27,7 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
         <div className="hero-illustration">🍎</div>
         <div>
           <p className="section-label">Bienvenido a Applearn</p>
-          <h2>Inicia sesión para empezar tu sesión de estudio adaptativa.</h2>
+          <h2>Inicia sesión para empezar tu estudio adaptativo.</h2>
         </div>
       </div>
 
