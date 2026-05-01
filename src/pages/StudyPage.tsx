@@ -126,10 +126,9 @@ const StudyPage = () => {
   const [questionSequence, setQuestionSequence] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<'A' | 'B' | 'C' | 'D' | ''>('');
-  const [feedback, setFeedback] = useState<{ status: 'idle' | 'correct' | 'incorrect'; message: string; hint?: string; nextDifficulty?: Difficulty }>({ status: 'idle', message: '' });
+  const [feedback, setFeedback] = useState<{ status: 'idle' | 'correct' | 'incorrect'; message: string; hint?: string }>({ status: 'idle', message: '' });
   const [correctCount, setCorrectCount] = useState(0);
   const [startTime, setStartTime] = useState<number | null>(null);
-  const [rawAIResponse, setRawAIResponse] = useState('');
   const [apiError, setApiError] = useState('');
   const [sessionCompleted, setSessionCompleted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -149,12 +148,10 @@ const StudyPage = () => {
     setSessionCompleted(false);
     setIsLoading(true);
     setStartTime(Date.now());
-    setRawAIResponse('');
 
     try {
       const generatedResult = await generateQuestions(topic, count, difficulty);
       setQuestionSequence(generatedResult.questions);
-      setRawAIResponse(generatedResult.rawResponse);
       setCurrentIndex(0);
       setSelectedOption('');
       setFeedback({ status: 'idle', message: '' });
@@ -177,13 +174,11 @@ const StudyPage = () => {
     }
 
     const isCorrect = selectedOption === currentQuestion.answer;
-    const nextDiff = getAdjustedDifficulty(isCorrect, currentQuestion.difficulty);
 
     setFeedback({
       status: isCorrect ? 'correct' : 'incorrect',
       message: isCorrect ? '¡Correcto! Continúa con confianza.' : 'No fue la mejor respuesta.',
       hint: isCorrect ? currentQuestion.hint : `Pista: ${currentQuestion.hint}`,
-      nextDifficulty: nextDiff
     });
 
     if (isCorrect) setCorrectCount((value) => value + 1);
@@ -308,13 +303,6 @@ const StudyPage = () => {
             <div className="metric-chip">Tiempo: {timeLabel}</div>
           </div>
 
-          {rawAIResponse && (
-            <div className="debug-card">
-              <p className="section-label">Respuesta Gemini</p>
-              <pre className="debug-text">{rawAIResponse}</pre>
-            </div>
-          )}
-
           <div className="answer-card">
             <p className="answer-label">Selecciona la opción correcta entre A, B, C o D</p>
             <div className="quick-actions">
@@ -335,7 +323,11 @@ const StudyPage = () => {
 
             <div className="action-row">
               <button type="button" className="secondary-button" onClick={handleSubmit}>Enviar respuesta</button>
-              <button type="button" className="primary-button" onClick={() => setSelectedOption('A')}>Respuesta sugerida</button>
+              <button
+                type="button"
+                className="primary-button"
+                onClick={() => setSelectedOption((currentQuestion?.answer ?? 'A') as 'A' | 'B' | 'C' | 'D')}
+              >Respuesta sugerida</button>
             </div>
           </div>
 
@@ -343,7 +335,6 @@ const StudyPage = () => {
             <div className={`feedback-panel ${feedback.status}`}>
               <strong>{feedback.message}</strong>
               <p>{feedback.hint}</p>
-              <p className="footnote">Próxima dificultad: <strong>{feedback.nextDifficulty}</strong></p>
             </div>
           )}
 
