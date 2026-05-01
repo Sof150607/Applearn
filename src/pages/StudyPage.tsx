@@ -26,24 +26,22 @@ const generateQuestions = async (topic: string, numQuestions: number, difficulty
 
   try {
     console.log('Generando preguntas para:', topic, numQuestions, difficulty);
-    const url = import.meta.env.DEV
-      ? '/api/google/v1beta/models/gemini-flash-latest:generateContent'
-      : 'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent';
+    const baseUrl = import.meta.env.DEV
+      ? '/api/google/v1beta2/models/gemini-flash-latest:generateText'
+      : 'https://generativelanguage.googleapis.com/v1beta2/models/gemini-flash-latest:generateText';
+    const url = `${baseUrl}?key=${encodeURIComponent(apiKey)}`;
 
     const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-goog-api-key': apiKey,
       },
       body: JSON.stringify({
-        contents: [
-          {
-            parts: [
-              { text: prompt },
-            ],
-          },
-        ],
+        prompt: {
+          text: prompt,
+        },
+        temperature: 0.2,
+        maxOutputTokens: 512,
       }),
     });
 
@@ -72,10 +70,16 @@ const generateQuestions = async (topic: string, numQuestions: number, difficulty
       return '';
     };
 
-    const generatedText = extractText(data.candidates?.[0]?.content ?? data.generatedText ?? '').trim();
+    const generatedText = extractText(
+      data.candidates?.[0]?.output ??
+      data.candidates?.[0]?.content ??
+      data.generatedText ??
+      data.output ??
+      ''
+    ).trim();
 
     console.log('Datos de respuesta:', JSON.stringify(data, null, 2));
-    console.log('Texto IA extrai do:', generatedText);
+    console.log('Texto IA extraído:', generatedText);
 
     const parseQuiz = (raw: string): any => {
       try {
