@@ -17,56 +17,31 @@ const getAdjustedDifficulty = (correct: boolean, current: Difficulty): Difficult
 };
 
 const generateQuestions = async (topic: string, numQuestions: number, difficulty: Difficulty): Promise<GeneratedQuestionSet> => {
-  const apiKey = import.meta.env.VITE_GOOGLE_API_KEY;
-  if (!apiKey) {
-    throw new Error('La clave VITE_GOOGLE_API_KEY no está configurada. Copia .env.example a .env y agrega tu clave Gemini.');
-  }
-
   const prompt = `Genera exactamente ${numQuestions} preguntas de opción múltiple sobre el tema "${topic}" con un nivel de dificultad "${difficulty}". Responde ÚNICAMENTE con un objeto JSON válido. Estructura obligatoria:\n{\n  "questions": [\n    {\n      "prompt": "texto de la pregunta",\n      "options": ["Opción A", "Opción B", "Opción C", "Opción D"],\n      "answer": "A" o "B" o "C" o "D" SOLAMENTE,\n      "hint": "pista breve"\n    }\n  ]\n}\n\nIMPORTANTE:\n- answer DEBE ser SOLO la letra: "A", "B", "C" o "D"\n- options SIEMPRE tiene exactamente 4 elementos\n- NO incluyas explicaciones ni comentarios\n- Devuelve ÚNICAMENTE el JSON, nada más\n\nEjemplo:\n{\n  "questions": [\n    {\n      "prompt": "¿Cuál es la capital de Francia?",\n      "options": ["Madrid", "París", "Berlín", "Roma"],\n      "answer": "B",\n      "hint": "Una ciudad muy romántica"\n    }\n  ]\n}`;
 
   try {
     console.log('Generando preguntas para:', topic, numQuestions, difficulty);
-    const modelName = 'text-bison-001';
-    const versions: Array<'v1beta2' | 'v1'> = ['v1beta2', 'v1'];
-    const buildUrl = (version: 'v1beta2' | 'v1') => {
-      const path = `${version}/models/${modelName}:generateText`;
-      return import.meta.env.DEV
-        ? `/api/google/${path}?key=${encodeURIComponent(apiKey)}`
-        : `https://generativelanguage.googleapis.com/${path}?key=${encodeURIComponent(apiKey)}`;
-    };
+    const url = '/api/google/v1/models/text-bison-001:generateText';
 
-    let response: Response | null = null;
-    let responseUrl = '';
-    for (const version of versions) {
-      const url = buildUrl(version);
-      response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          prompt: { text: prompt },
-          temperature: 0.2,
-          max_output_tokens: 512,
-        }),
-      });
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        prompt: { text: prompt },
+        temperature: 0.2,
+        maxOutputTokens: 512,
+      }),
+    });
 
-      console.log('Intento de URL:', url, 'status:', response.status);
-      if (response.ok) {
-        responseUrl = url;
-        break;
-      }
-      if (response.status !== 404) {
-        break;
-      }
+    console.log('Intento de URL:', url, 'status:', response.status);
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`API error ${response.status}: ${errorText}`);
     }
 
-    if (!response || !response.ok) {
-      const errorText = response ? await response.text() : 'No response received';
-      throw new Error(`API error ${response?.status ?? 'unknown'}: ${errorText}`);
-    }
-
-    console.log('Respuesta HTTP:', response.status, response.statusText, 'desde:', responseUrl);
+    console.log('Respuesta HTTP:', response.status, response.statusText);
 
     const data = await response.json();
 

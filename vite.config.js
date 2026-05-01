@@ -15,6 +15,9 @@ export default defineConfig({
         target: 'https://generativelanguage.googleapis.com',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/google/, ''),
+        headers: {
+          'X-goog-api-key': process.env.VITE_GOOGLE_API_KEY || '',
+        },
       },
     },
   },
