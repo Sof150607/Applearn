@@ -26,30 +26,47 @@ const generateQuestions = async (topic: string, numQuestions: number, difficulty
 
   try {
     console.log('Generando preguntas para:', topic, numQuestions, difficulty);
-    const baseUrl = import.meta.env.DEV
-      ? '/api/google/v1beta2/models/text-bison-001:generateText'
-      : 'https://generativelanguage.googleapis.com/v1beta2/models/text-bison-001:generateText';
-    const url = `${baseUrl}?key=${encodeURIComponent(apiKey)}`;
+    const modelName = 'text-bison-001';
+    const versions: Array<'v1beta2' | 'v1'> = ['v1beta2', 'v1'];
+    const buildUrl = (version: 'v1beta2' | 'v1') => {
+      const path = `${version}/models/${modelName}:generateText`;
+      return import.meta.env.DEV
+        ? `/api/google/${path}?key=${encodeURIComponent(apiKey)}`
+        : `https://generativelanguage.googleapis.com/${path}?key=${encodeURIComponent(apiKey)}`;
+    };
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        prompt: {
-          text: prompt,
+    let response: Response | null = null;
+    let responseUrl = '';
+    for (const version of versions) {
+      const url = buildUrl(version);
+      response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        temperature: 0.2,
-        maxOutputTokens: 512,
-      }),
-    });
+        body: JSON.stringify({
+          prompt: { text: prompt },
+          temperature: 0.2,
+          max_output_tokens: 512,
+        }),
+      });
 
-    console.log('Respuesta HTTP:', response.status, response.statusText);
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`API error ${response.status}: ${errorText}`);
+      console.log('Intento de URL:', url, 'status:', response.status);
+      if (response.ok) {
+        responseUrl = url;
+        break;
+      }
+      if (response.status !== 404) {
+        break;
+      }
     }
+
+    if (!response || !response.ok) {
+      const errorText = response ? await response.text() : 'No response received';
+      throw new Error(`API error ${response?.status ?? 'unknown'}: ${errorText}`);
+    }
+
+    console.log('Respuesta HTTP:', response.status, response.statusText, 'desde:', responseUrl);
 
     const data = await response.json();
 
@@ -60,11 +77,11 @@ const generateQuestions = async (topic: string, numQuestions: number, difficulty
       }
       if (value && typeof value === 'object') {
         const obj = value as any;
-        // Gemini structure: parts[0].text
+        if (obj.output) return extractText(obj.output);
+        if (Array.isArray(obj.content)) return extractText(obj.content);
         if (obj.parts && Array.isArray(obj.parts)) {
           return extractText(obj.parts[0]?.text ?? '');
         }
-        // Fallback: text or content
         return extractText(obj.text ?? obj.content ?? '');
       }
       return '';
