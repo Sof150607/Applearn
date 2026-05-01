@@ -26,7 +26,11 @@ const generateQuestions = async (topic: string, numQuestions: number, difficulty
 
   try {
     console.log('Generando preguntas para:', topic, numQuestions, difficulty);
-    const response = await fetch(`/api/google/v1beta/models/gemini-flash-latest:generateContent`, {
+    const url = import.meta.env.DEV
+      ? '/api/google/v1beta/models/gemini-flash-latest:generateContent'
+      : 'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent';
+
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
