@@ -27,8 +27,8 @@ const generateQuestions = async (topic: string, numQuestions: number, difficulty
   try {
     console.log('Generando preguntas para:', topic, numQuestions, difficulty);
     const baseUrl = import.meta.env.DEV
-      ? '/api/google/v1beta2/models/gemini-flash-latest:generateText'
-      : 'https://generativelanguage.googleapis.com/v1beta2/models/gemini-flash-latest:generateText';
+      ? '/api/google/v1beta2/models/text-bison-001:generateText'
+      : 'https://generativelanguage.googleapis.com/v1beta2/models/text-bison-001:generateText';
     const url = `${baseUrl}?key=${encodeURIComponent(apiKey)}`;
 
     const response = await fetch(url, {
