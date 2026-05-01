@@ -17,7 +17,9 @@ html, body, #root {
 
 body {
   margin: 0;
-  background: linear-gradient(180deg, #f7f4ff 0%, #ece9ff 100%);
+  min-height: 100vh;
+  background: white url('./assets/fondo.svg') center/cover no-repeat;
+  background-attachment: fixed;
 }
 
 button, textarea {
