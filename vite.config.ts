@@ -7,7 +7,7 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
     server: {
-      port: 8080,
+      port: 4173,
       proxy: {
         '/api/google': {
           target: 'https://generativelanguage.googleapis.com',
