@@ -17,103 +17,45 @@ const getAdjustedDifficulty = (correct: boolean, current: Difficulty): Difficult
 };
 
 const generateQuestions = async (topic: string, numQuestions: number, difficulty: Difficulty): Promise<GeneratedQuestionSet> => {
-  const apiKey = import.meta.env.VITE_GOOGLE_API_KEY;
-  if (!apiKey) {
-    throw new Error('La clave VITE_GOOGLE_API_KEY no está configurada. Copia .env.example a .env y agrega tu clave Gemini.');
-  }
-
-  const prompt = `Genera exactamente ${numQuestions} preguntas de opción múltiple sobre el tema "${topic}" con un nivel de dificultad "${difficulty}". Responde ÚNICAMENTE con un objeto JSON válido. Estructura obligatoria:\n{\n  "questions": [\n    {\n      "prompt": "texto de la pregunta",\n      "options": ["Opción A", "Opción B", "Opción C", "Opción D"],\n      "answer": "A" o "B" o "C" o "D" SOLAMENTE,\n      "hint": "pista breve"\n    }\n  ]\n}\n\nIMPORTANTE:\n- answer DEBE ser SOLO la letra: "A", "B", "C" o "D"\n- options SIEMPRE tiene exactamente 4 elementos\n- NO incluyas explicaciones ni comentarios\n- Devuelve ÚNICAMENTE el JSON, nada más\n\nEjemplo:\n{\n  "questions": [\n    {\n      "prompt": "¿Cuál es la capital de Francia?",\n      "options": ["Madrid", "París", "Berlín", "Roma"],\n      "answer": "B",\n      "hint": "Una ciudad muy romántica"\n    }\n  ]\n}`;
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
 
   try {
     console.log('Generando preguntas para:', topic, numQuestions, difficulty);
-    const response = await fetch(`/api/google/v1beta/models/gemini-flash-latest:generateContent`, {
+    console.log('Usando backend en:', backendUrl);
+    
+    const response = await fetch(`${backendUrl}/api/generate-questions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-goog-api-key': apiKey,
       },
       body: JSON.stringify({
-        contents: [
-          {
-            parts: [
-              { text: prompt },
-            ],
-          },
-        ],
+        topic,
+        numQuestions,
+        difficulty,
       }),
     });
 
     console.log('Respuesta HTTP:', response.status, response.statusText);
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`API error ${response.status}: ${errorText}`);
+      throw new Error(`Backend error ${response.status}: ${errorText}`);
     }
 
     const data = await response.json();
 
-    const extractText = (value: unknown): string => {
-      if (typeof value === 'string') return value;
-      if (Array.isArray(value)) {
-        return value.map((item) => extractText(item)).join('');
-      }
-      if (value && typeof value === 'object') {
-        const obj = value as any;
-        // Gemini structure: parts[0].text
-        if (obj.parts && Array.isArray(obj.parts)) {
-          return extractText(obj.parts[0]?.text ?? '');
-        }
-        // Fallback: text or content
-        return extractText(obj.text ?? obj.content ?? '');
-      }
-      return '';
-    };
-
-    const generatedText = extractText(data.candidates?.[0]?.content ?? data.generatedText ?? '').trim();
-
-    console.log('Datos de respuesta:', JSON.stringify(data, null, 2));
-    console.log('Texto IA extrai do:', generatedText);
-
-    const parseQuiz = (raw: string): any => {
-      try {
-        const parsed = JSON.parse(raw);
-        return parsed.questions ?? parsed;
-      } catch {
-        const match = raw.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
-        if (match) return parseQuiz(match[0]);
-        return null;
-      }
-    };
-
-    const questionsArray = parseQuiz(generatedText);
-    if (!Array.isArray(questionsArray) || questionsArray.length === 0) {
-      throw new Error(`No se pudo parsear el JSON de la IA. Raw:\n${generatedText}`);
+    if (!data.success || !Array.isArray(data.questions)) {
+      throw new Error(data.error || 'Invalid response from backend');
     }
 
     return {
-      questions: questionsArray.slice(0, numQuestions).map((q: any, i: number) => ({
-        id: `${topic}-${i}`,
-        prompt: q.prompt?.toString() || `Pregunta ${i + 1} sobre ${topic}`,
-        options: Array.isArray(q.options) ? q.options.map((option: string) => option.toString()) : ['Opción A', 'Opción B', 'Opción C', 'Opción D'],
-        answer: (q.answer?.toString() || 'A').toUpperCase(),
-        difficulty,
-        hint: q.hint?.toString() || 'Piensa en el tema y elige la mejor opción.',
-      })),
-      rawResponse: generatedText,
+      questions: data.questions,
+      rawResponse: data.rawResponse,
     };
 
   } catch (error) {
     console.error('Error generating questions:', error);
-    return {
-      questions: Array.from({ length: numQuestions }, (_, i) => ({
-        id: `${topic}-fallback-${i}`,
-        prompt: `Pregunta ${i + 1} sobre ${topic}`,
-        options: ['Opción A', 'Opción B', 'Opción C', 'Opción D'],
-        answer: 'A',
-        difficulty,
-        hint: 'Respuesta de ejemplo',
-      })),
-      rawResponse: (error instanceof Error ? error.message : 'Error desconocido'),
-    };
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw new Error(`No se pudieron generar preguntas: ${errorMessage}. Asegúrate de que el servidor backend está corriendo en ${import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001'}`);
   }
 };
 
@@ -322,10 +264,10 @@ const StudyPage = () => {
             </div>
 
             <div className="action-row">
-              <button type="button" className="secondary-button" onClick={handleSubmit}>Enviar respuesta</button>
+              <button type="button" className="primary-button" onClick={handleSubmit}>Enviar respuesta</button>
               <button
                 type="button"
-                className="primary-button"
+                className="secondary-button"
                 onClick={() => setSelectedOption((currentQuestion?.answer ?? 'A') as 'A' | 'B' | 'C' | 'D')}
               >Respuesta sugerida</button>
             </div>
